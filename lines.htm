@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+        <title>Lines</title>
+        <style>
+        
+            body
+            {
+                margin: 30px;
+            }
+            
+            table
+            {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            td
+            {
+                width: 10px;
+                height: 10px;
+                margin: 1px;
+            }
+            
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script>
+        
+            window.onload = init;
+            
+            let width = 80;
+            let height = 80;
+            let on = "#333333";
+            let off = "#EEEEEE";
+            let angle = 0;
+            let size = 22;
+            
+            function init()
+            {
+                createCanvas();
+                clearCanvas();
+                test();
+                window.onkeydown = function(event) 
+                {
+                    switch (event.keyCode) {
+                        case 37:
+                            angle -= 2;
+                            test();
+                            break;
+                        case 39:
+                            test();
+                            break;
+                    }
+                };
+            }
+
+            function createCanvas()
+            {
+                let $tbody = $("tbody");
+                for (let r = 0; r < height; r++)
+                {
+                    let $tr = $("<tr>");
+
+                    $tbody.append($tr);
+
+                    for (let c = 0; c < width; c++)
+                    {
+                        let $td = $("<td>");
+                        
+                        $tr.append($td);
+                        $td.attr("id", "pixel-" + r + "-" + c);
+                    }
+                }
+            }
+            
+            function clearCanvas()
+            {
+                for (let r = 0; r < height; r++)
+                {
+                    for (let c = 0; c < width; c++)
+                    {
+                        setPixel(r, c, off);
+                    }
+                }
+            }
+
+            function fillTriangleAt(ang, angleOffset, scale, xOffset, yOffset)
+            {
+                let c1 = Math.floor(Math.cos((ang + angleOffset) * (Math.PI / 180)) * scale) + xOffset;
+                let r1 = Math.floor(Math.sin((ang + angleOffset) * (Math.PI / 180)) * scale) + yOffset;
+                let rgb1 = {r:255,g:0,b:0};
+                let v1 = [c1,r1,rgb1];
+
+                let c2 = Math.floor(Math.cos((ang + angleOffset + 120) * (Math.PI / 180)) * scale) + xOffset;
+                let r2 = Math.floor(Math.sin((ang + angleOffset + 120) * (Math.PI / 180)) * scale) + yOffset;
+                let rgb2 = {r:0,g:255,b:0};
+                let v2 = [c2,r2,rgb2];
+
+                let c3 = Math.floor(Math.cos((ang + angleOffset + 240) * (Math.PI / 180)) * scale) + xOffset;
+                let r3 = Math.floor(Math.sin((ang + angleOffset + 240) * (Math.PI / 180)) * scale) + yOffset;
+                let rgb3 = {r:0,g:0,b:255};
+                let v3 = [c3,r3,rgb3];
+
+                fillTriangle(v1,v2,v3);
+            }
+            
+            function test()
+            {
+                clearCanvas();
+                fillTriangleAt(angle,0,size,23,23);
+                fillTriangleAt(-angle,0,size,57,23);
+                fillTriangleAt(-angle,60,size,23,57);
+                fillTriangleAt(angle,60,size,57,57);
+
+                // setPixel(r1, c1, getRGB({r:0,g:0,b:0}));
+                // setPixel(r2, c2, getRGB({r:0,g:0,b:0}));
+                // setPixel(r3, c3, getRGB({r:0,g:0,b:0}));
+
+                angle+=10;
+                if (Math.abs(angle) > 360) { angle = 0; }
+                setTimeout(test, 1);
+            }
+
+            function fillTriangle(v1, v2, v3)
+            {
+                // Set v1 and v2 to the vertices of greatest horizontal distance
+                let d12 = Math.abs(v1[0]-v2[0]);
+                let d13 = Math.abs(v1[0]-v3[0]);
+                let d23 = Math.abs(v2[0]-v3[0]);
+                if (d13 > d12 && d13 >= d23)
+                {
+                    var temp = v2;
+                    v2 = v3;
+                    v3 = temp;
+                    d12 = Math.abs(v1[0]-v2[0]);
+                    d13 = Math.abs(v1[0]-v3[0]);
+                    d23 = Math.abs(v2[0]-v3[0]);
+                }
+                else if (d23 > d12 && d23 >= d13)
+                {
+                    var temp = v1;
+                    v1 = v3;
+                    v3 = temp;
+                    d12 = Math.abs(v1[0]-v2[0]);
+                    d13 = Math.abs(v1[0]-v3[0]);
+                    d23 = Math.abs(v2[0]-v3[0]);
+                }
+                // Set v1 to the left most vertex so line12 is always drawn left to right
+                // This means line13 is always on the left side of the triangle
+                if (v1[0] > v2[0])
+                {
+                    var temp = v1;
+                    v1 = v2;
+                    v2 = temp;
+                }
+                // Setup variables
+                let maxLength = d12;
+                let distance = 0;
+                let x = v1[0];
+                let y = v1[1];
+                let rise12 = v2[1] - v1[1];
+                let run12  = v2[0] - v1[0];
+                let xsum = 0;
+                let ysum = 0;
+                let rise31 = v3[1] - v1[1];
+                let run31  = v3[0] - v1[0];
+                let slope31 = rise31/run31;
+                let rise23 = v2[1] - v3[1];
+                let run23  = v2[0] - v3[0];
+                let slope23 = rise23/run23;
+                let colorObject = {r:v1[2].r,g:v1[2].g,b:v1[2].b};
+
+                setPixel(y,x,colorObject);
+
+                // Draw line from v1 to v2
+                
+                // While x,y is not at destination
+                while(x != v2[0] || y != v2[1])
+                {
+                    //console.log(x + " -> " + v2[0]);
+                    // If true, move horizontally 
+                    if(xsum <= ysum)
+                    {
+                        var fx;
+                        xsum += Math.abs(rise12);
+                        // If true, move right
+                        if(x < v2[0])
+                        {
+                            x++;
+                            let toColorObject = {r:0,g:0,b:0};
+                            // Determine slope based on which side of vertex 3 x,y is on. Vertex 3 is always between v1 and v2
+                            if (x >= v3[0])
+                            {
+                                // Draw line between line23 and line 31 or line12 and line23 (the two right-most lines)
+                                // The color is becoming further from v3
+                                toColorObject.r = v2[2].r * (x - v3[0])/run23 + (v3[2].r * ((run23 - x + v3[0])/run23));
+                                toColorObject.g = v2[2].g * (x - v3[0])/run23 + (v3[2].g * ((run23 - x + v3[0])/run23));
+                                toColorObject.b = v2[2].b * (x - v3[0])/run23 + (v3[2].b * ((run23 - x + v3[0])/run23));
+                                fx = run23 == 0 ? v3[1] : Math.floor(slope23*(x-v3[0])+v3[1]);
+                            }
+                            else
+                            {
+                                // Draw line between line23 and line 31 or line23 and line12 (the two left-most lines)
+                                // The color is becoming closer to v3
+                                toColorObject.r = v1[2].r * (v3[0] - x)/run31 + (v3[2].r * ((run31 + x - v3[0])/run31));
+                                toColorObject.g = v1[2].g * (v3[0] - x)/run31 + (v3[2].g * ((run31 + x - v3[0])/run31));
+                                toColorObject.b = v1[2].b * (v3[0] - x)/run31 + (v3[2].b * ((run31 + x - v3[0])/run31));
+                                fx = Math.floor(slope31*(x-v1[0])+v1[1]);
+                            }
+                            drawLine(y, x, fx, x, colorObject, toColorObject);
+                            // setPixel(fx,x,"#333333");
+                        }
+                    }
+                    // If true, move vertically
+                    if(xsum > ysum)
+                    {
+                        ysum += Math.abs(run12);
+                        if(y < v2[1]) { y++; }
+                        if(y > v2[1]) { y--; }
+                    }
+                    if(xsum == ysum)
+                    {
+                        xsum = 0;
+                        ysum = 0;
+                    }
+                    setPixel(y, x, getRGB(colorObject));
+
+                    // Keep track of how many pixels have been drawn and update color
+                    distance++;
+                    colorObject.r = v1[2].r + ((v2[2].r - v1[2].r) * distance/maxLength);
+                    colorObject.g = v1[2].g + ((v2[2].g - v1[2].g) * distance/maxLength);
+                    colorObject.b = v1[2].b + ((v2[2].b - v1[2].b) * distance/maxLength);
+                }
+            }
+
+            function drawLine(fromR, fromC, toR, toC, startColor, endColor)
+            {
+                let colorObject = {r:startColor.r,g:startColor.g,b:startColor.b};
+                let currC = fromC;
+                let currR = fromR;
+                let rise = Math.abs(toR - fromR);
+                let run = Math.abs(toC - fromC);
+                let maxLength = Math.max(rise, run);
+                let distance = 0;
+                let colorStep = maxLength;
+                let x = 0;
+                let y = 0;
+
+                setPixel(fromR, fromC, getRGB(colorObject));
+
+                while(currR != toR || currC != toC)
+                {
+                    if(x <= y)
+                    {
+                        x += rise;
+                        if(currC < toC) { currC++; }
+                        if(currC > toC) { currC--; }
+                    }
+                    if(x > y)
+                    {
+                        y += run;
+                        if(currR < toR) { currR++; }
+                        if(currR > toR) { currR--; }
+                    }
+
+                    // curr has moved, set the pixel in the new spot
+                    setPixel(currR, currC, getRGB(colorObject));
+
+                    // keep track of how many pixels have been drawn
+                    distance++;
+
+                    colorObject.r = startColor.r + ((endColor.r - startColor.r) * distance/maxLength);
+                    colorObject.g = startColor.g + ((endColor.g - startColor.g) * distance/maxLength);
+                    colorObject.b = startColor.b + ((endColor.b - startColor.b) * distance/maxLength);
+                }
+            }
+            
+            function getRGB(colorObject) {
+                return "rgb(" + colorObject.r + "," + colorObject.g + "," + colorObject.b + ")";
+            }
+
+            function setPixel(r, c, color)
+            {
+                if ((0 <= r) && (r < height))
+				{
+					if ((0 <= c) && (c < width))
+					{
+						$("#pixel-" + r + "-" + c).css("background-color", color);
+					}
+				}
+            }
+
+            function getPixelColor(r, c)
+            {
+                if ((0 <= r) && (r < height))
+				{
+					if ((0 <= c) && (c < width))
+					{
+						return $("#pixel-" + r + "-" + c).css("background-color");
+					}
+				}
+            }
+            
+        </script>
+    </head>
+    <body>
+        <table>
+            <tbody>
+            </tbody>
+        </table>
+    </body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+        <title>Lines</title>
+        <style>
+        
+            body
+            {
+                margin: 30px;
+            }
+            
+            table
+            {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            td
+            {
+                width: 10px;
+                height: 10px;
+                margin: 1px;
+            }
+            
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script>
+        
+            window.onload = init;
+            
+            let width = 51;
+            let height = width;
+            let on = "#333333";
+            let off = "#EEEEEE";
+            let angle = 0;
+            
+            function init()
+            {
+                createCanvas();
+                clearCanvas();
+                test();
+            }
+            
+            function createCanvas()
+            {
+                let $tbody = $("tbody");
+                
+                for (let r = 0; r < height; r++)
+                {
+                    let $tr = $("<tr>");
+
+                    $tbody.append($tr);
+
+                    for (let c = 0; c < width; c++)
+                    {
+                        let $td = $("<td>");
+                        
+                        $tr.append($td);
+                        $td.attr("id", "pixel-" + r + "-" + c);
+                    }
+                }
+            }
+            
+            function clearCanvas()
+            {
+                for (let r = 0; r < height; r++)
+                {
+                    for (let c = 0; c < width; c++)
+                    {
+                        setPixel(r, c, off);
+                    }
+                }
+            }
+            
+            function test()
+            {
+                //drawLine(0, 0, 0, 20);
+
+                let r = parseInt(Math.sin(angle * (Math.PI / 180)) * 20);
+                let c = parseInt(Math.cos(angle * (Math.PI / 180)) * 20);
+                
+                clearCanvas();
+                drawLine(25, 25, 25 + r, 25 + c);
+                console.log(angle, r, c);
+
+                angle += 1;
+                
+                while (angle > 360)
+                {
+                    angle -= 360;
+                }
+
+                setTimeout(test, 10);
+                
+            }
+
+            function drawLine(fromR, fromC, toR, toC)
+            {
+                setPixel(fromR, fromC, on);
+                setPixel(toR, toC, on);
+            }
+            
+            function setPixel(r, c, color)
+            {
+                if ((0 <= r) && (r < height))
+				{
+					if ((0 <= c) && (c < width))
+					{
+						$("#pixel-" + r + "-" + c).css("background-color", color);
+					}
+				}
+            }
+            
+        </script>
+    </head>
+    <body>
+        <table>
+            <tbody>
+            </tbody>
+        </table>
+    </body>
+</html>
